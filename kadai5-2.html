@@ -1,20 +1,50 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8">
-    <title>演習課題5-2：外部APIの呼び出しテスト</title>
+    <title>演習課題5-2：Countries API</title>
 </head>
 <body>
-    <h1 id="msg">何かのAPI</h1>
+    <h1 id="msg">国の情報を取得</h1>
     <form name="apiform"><p>
-        何かのフォーム：<input type="text" name="form_data">
+        国名（英語で入力）：<input type="text" name="form_data">
         <button type="button" id="btn1" onclick="some_api(this.form)">実行</button>
     </p></form>
     
     <div id="result"></div>
     <script>
         async function some_api(myForm) {
-            // ここにコードを書く
-            document.getElementById("result").innerHTML += myForm.form_data.value+"<br />";
+           const country = myForm.form_data.value.trim();
+            const url = `https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fullText=true`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok && data.length > 0) {
+                    const info = data[0];
+                    const name = info.name.common;
+                    const capital = info.capital ? info.capital[0] : "不明";
+                    const population = info.population.toLocaleString();
+                    const region = info.region;
+                    const currencies = info.currencies ? Object.values(info.currencies).map(c => c.name).join(", ") : "不明";
+                    const flag = info.flags.png;
+
+                    document.getElementById("result").innerHTML = `
+                        <h3>${name} の情報</h3>
+                        <img src="${flag}" alt="国旗" width="100"><br />
+                        首都：${capital}<br />
+                        人口：${population} 人<br />
+                        地域：${region}<br />
+                        通貨：${currencies}<br />
+                        <hr />
+                    `;
+                } else {
+                    document.getElementById("result").innerHTML = `国が見つかりませんでした。`;
+                }
+            } catch (error) {
+                document.getElementById("result").innerHTML = `通信エラー：${error}`;
+            }
+
             document.apiform.reset();
         }
     </script>
